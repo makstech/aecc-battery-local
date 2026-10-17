@@ -30,7 +30,7 @@ Works with any battery built on the AECC platform: Lunergy, Sunpura, Voltdeer, A
 - **Modbus telemetry**: temperatures, lifetime energy counters, a Fault sensor, alarm flags and the unit's nominal power, read over Modbus on the same connection. Appears only on devices that answer the Modbus map
 - **Full battery control**: one signed power setpoint (positive charges, negative discharges), per-direction power limits (up to 2400W), SOC limits
 - **Honest controls**: a command the battery never confirmed raises an error in the interface instead of leaving a value on screen that was never accepted
-- **Work mode selector**: Self-Consumption (AI), Custom/Manual
+- **Work mode selector**: Self-Consumption (AI), Self-Consumption (the same without AI smart charge, so the battery never charges from the grid on the cloud's price plan), Custom/Manual
 - **Multi-brand**: select your brand during setup; DeviceInfo shows correct manufacturer and model
 - **Multi-unit**: master/slave stacks get one device per battery with per-unit telemetry, plus whole-system totals. Manual control reaches the master only, see [Multi-unit setups](#multi-unit--master-slave-setups)
 - **Multi-language**: English, Dutch, German, French
@@ -205,7 +205,7 @@ Modbus entities exist only on devices that answer the Modbus map on port 8080. T
 | Battery Power | Number (slider) | Power target magnitude, up to the higher of the two power limits. **Deprecated, removal in 2.0.0** |
 | Discharge Limit | Number (slider) | Min SOC before discharge stops (5-50%) |
 | Charge Limit | Number (slider) | Max SOC before charging stops (50-100%) |
-| Work Mode | Select | Self-Consumption (AI), Custom/Manual |
+| Work Mode | Select | Self-Consumption (AI), Self-Consumption, Custom/Manual |
 
 ---
 

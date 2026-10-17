@@ -26,6 +26,7 @@ from .const import (
     MODE_CUSTOM,
     MODE_REGISTERS,
     MODE_SELF_CONSUMPTION,
+    MODE_SELF_CONSUMPTION_NO_AI,
     POLL_INTERVAL,
     REG_AI_SMART_CHARGE,
     REG_AI_SMART_DISC,
@@ -957,7 +958,7 @@ class AeccBatteryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         success = await self._logged_write(payload, f"work_mode({mode})")
         if success:
             self._current_work_mode = mode
-            if mode == MODE_SELF_CONSUMPTION:
+            if mode in (MODE_SELF_CONSUMPTION, MODE_SELF_CONSUMPTION_NO_AI):
                 # The AI decides now and the slot we wrote is cleared, so the
                 # remembered setpoint is no longer what the battery is running.
                 self._commanded_direction = "Idle"
@@ -1012,6 +1013,7 @@ class AeccBatteryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except (TypeError, ValueError):
                 return None
 
+        ems_on = _int(REG_EMS_ENABLE)
         min_soc = _int(REG_MIN_SOC)
         max_soc = _int(REG_MAX_SOC)
         ai_charge = _int(REG_AI_SMART_CHARGE)
@@ -1046,8 +1048,12 @@ class AeccBatteryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # There is no "Disabled" mode. A device reporting EMS off (ems_on==0)
         # is shown as Custom; selecting a mode or direction re-enables it.
-        if ai_charge == 1 or ai_discharge == 1:
+        if ems_on == 0:
+            self.initial_work_mode = MODE_CUSTOM
+        elif ai_charge == 1:
             self.initial_work_mode = MODE_SELF_CONSUMPTION
+        elif ai_discharge == 1:
+            self.initial_work_mode = MODE_SELF_CONSUMPTION_NO_AI
         else:
             self.initial_work_mode = MODE_CUSTOM
         self._current_work_mode = self.initial_work_mode

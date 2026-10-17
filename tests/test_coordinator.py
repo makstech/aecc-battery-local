@@ -17,6 +17,7 @@ from custom_components.aecc_battery.const import (
     MAX_REGISTER_POWER_DEFAULT,
     MODE_CUSTOM,
     MODE_SELF_CONSUMPTION,
+    MODE_SELF_CONSUMPTION_NO_AI,
     REG_AI_SMART_CHARGE,
     REG_AI_SMART_DISC,
     REG_CONTROL_TIME1,
@@ -646,6 +647,24 @@ async def test_set_work_mode_self_consumption(
     assert payload[REG_CONTROL_TIME1] == SLOT_DISABLED
 
 
+async def test_set_work_mode_self_consumption_without_ai(
+    coordinator: AeccBatteryCoordinator,
+) -> None:
+    """Self-Consumption without AI writes the AI set with AI smart charge off."""
+    result = await coordinator.async_set_work_mode(MODE_SELF_CONSUMPTION_NO_AI)
+    assert result is True
+
+    payload = coordinator.client.set_control_parameters.call_args[0][0]
+    assert payload[REG_EMS_ENABLE] == "1"
+    assert payload[REG_AI_SMART_CHARGE] == "0"
+    assert payload[REG_AI_SMART_DISC] == "1"
+    assert payload[REG_CUSTOM_MODE] == "0"
+    assert payload[REG_SCHEDULE_MODE] == "3"
+    assert payload[REG_CONTROL_TIME1] == SLOT_DISABLED
+    assert coordinator.current_work_mode == MODE_SELF_CONSUMPTION_NO_AI
+    assert coordinator.commanded_direction == "Idle"
+
+
 async def test_set_work_mode_disabled_removed(
     coordinator: AeccBatteryCoordinator,
 ) -> None:
@@ -1011,6 +1030,37 @@ async def test_read_initial_state_self_consumption(
     }
     await coordinator.async_read_initial_state()
     assert coordinator.initial_work_mode == "Self-Consumption (AI)"
+
+
+async def test_read_initial_state_self_consumption_without_ai(
+    coordinator: AeccBatteryCoordinator,
+) -> None:
+    """AI smart discharge alone reads back as Self-Consumption without AI."""
+    coordinator.client.get_control_parameters.return_value = {
+        "ControlInfo": {
+            "3000": "1",
+            "3021": "0",
+            "3022": "1",
+            "3030": "0",
+        }
+    }
+    await coordinator.async_read_initial_state()
+    assert coordinator.initial_work_mode == MODE_SELF_CONSUMPTION_NO_AI
+
+
+async def test_read_initial_state_ems_off_with_ai_flag_maps_to_custom(
+    coordinator: AeccBatteryCoordinator,
+) -> None:
+    """The app's AI switch leaves EMS off with AI smart discharge on: that is not self-consumption."""
+    coordinator.client.get_control_parameters.return_value = {
+        "ControlInfo": {
+            "3000": "0",
+            "3021": "0",
+            "3022": "1",
+        }
+    }
+    await coordinator.async_read_initial_state()
+    assert coordinator.initial_work_mode == MODE_CUSTOM
 
 
 async def test_read_initial_state_ems_off_maps_to_custom(

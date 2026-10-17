@@ -223,9 +223,10 @@ SLOT_DISABLED = "0,00:00,00:00,0,0,0,0,0,0,100,10"
 # Direction to Idle), which clears the schedule slot while leaving EMS on,
 # custom mode on and both AI flags off, so nothing drives the battery.
 MODE_SELF_CONSUMPTION = "Self-Consumption (AI)"
+MODE_SELF_CONSUMPTION_NO_AI = "Self-Consumption"
 MODE_CUSTOM = "Custom / Manual"
 
-WORK_MODES = [MODE_SELF_CONSUMPTION, MODE_CUSTOM]
+WORK_MODES = [MODE_SELF_CONSUMPTION, MODE_SELF_CONSUMPTION_NO_AI, MODE_CUSTOM]
 
 # Schedule-mode value (3020) that accompanies a manual setpoint.
 #
@@ -256,6 +257,16 @@ MODE_REGISTERS = {
         REG_CUSTOM_MODE: "0",
         # Clear the leftover manual time slot so the firmware stops executing
         # the previous custom setpoint and hands control back to the AI.
+        REG_CONTROL_TIME1: SLOT_DISABLED,
+    },
+    # Without AI smart charge (3021, the app's AI / Auto switch): still self-consumption, but no
+    # grid charging on the cloud's price plan.
+    MODE_SELF_CONSUMPTION_NO_AI: {
+        REG_EMS_ENABLE: "1",
+        REG_SCHEDULE_MODE: "3",
+        REG_AI_SMART_CHARGE: "0",
+        REG_AI_SMART_DISC: "1",
+        REG_CUSTOM_MODE: "0",
         REG_CONTROL_TIME1: SLOT_DISABLED,
     },
     MODE_CUSTOM: {
