@@ -207,6 +207,8 @@ REG_CUSTOM_MODE = "3030"  # 0 = off, 1 = on
 #        "1,00:00,23:59,800,0,6,0,0,0,100,10"    (AEG discharge at 800 W)
 # Gated on BRAND_AEG; see _encode_active_slot in coordinator.
 REG_CONTROL_TIME1 = "3003"  # First active time slot
+# All sixteen slots: the vendor cloud's AI writes its day plan across them.
+REG_CONTROL_SLOTS = [str(addr) for addr in range(3003, 3019)]
 
 REG_MIN_SOC = "3023"  # Minimum discharge SOC  (confirmed: currently 10)
 REG_MAX_SOC = "3024"  # Maximum charge SOC     (confirmed: currently 98)
@@ -260,14 +262,14 @@ MODE_REGISTERS = {
         REG_CONTROL_TIME1: SLOT_DISABLED,
     },
     # Without AI smart charge (3021, the app's AI / Auto switch): still self-consumption, but no
-    # grid charging on the cloud's price plan.
+    # grid charging on the cloud's price plan, and none of the plan's slots left to run.
     MODE_SELF_CONSUMPTION_NO_AI: {
         REG_EMS_ENABLE: "1",
         REG_SCHEDULE_MODE: "3",
         REG_AI_SMART_CHARGE: "0",
         REG_AI_SMART_DISC: "1",
         REG_CUSTOM_MODE: "0",
-        REG_CONTROL_TIME1: SLOT_DISABLED,
+        **dict.fromkeys(REG_CONTROL_SLOTS, SLOT_DISABLED),
     },
     MODE_CUSTOM: {
         REG_EMS_ENABLE: "1",

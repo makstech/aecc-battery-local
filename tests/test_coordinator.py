@@ -660,7 +660,7 @@ async def test_set_work_mode_self_consumption_without_ai(
     assert payload[REG_AI_SMART_DISC] == "1"
     assert payload[REG_CUSTOM_MODE] == "0"
     assert payload[REG_SCHEDULE_MODE] == "3"
-    assert payload[REG_CONTROL_TIME1] == SLOT_DISABLED
+    assert {payload[str(addr)] for addr in range(3003, 3019)} == {SLOT_DISABLED}
     assert coordinator.current_work_mode == MODE_SELF_CONSUMPTION_NO_AI
     assert coordinator.commanded_direction == "Idle"
 
